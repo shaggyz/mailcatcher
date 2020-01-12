@@ -29,8 +29,6 @@ module MailCatcher
         from = get_sender
         to = get_recipients
 
-        puts to.inspect
-
         head = "#{DateTime.now.strftime('Date: %a, %d %b %Y %H:%M:%S %z')}
 Subject: #{@subject}
 From: #{from}
