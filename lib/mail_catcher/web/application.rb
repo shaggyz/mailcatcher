@@ -9,6 +9,7 @@ require "skinny"
 
 require "mail_catcher/bus"
 require "mail_catcher/mail"
+require "mail_catcher/mailjet"
 
 class Sinatra::Request
   include Skinny::Helpers
@@ -170,6 +171,27 @@ module MailCatcher
           status 204
         else
           not_found
+        end
+      end
+
+      post "/send" do
+        push = JSON.parse(request.body.read)
+        content_type 'application/json'
+        push["Messages"].each do |mjmessage|
+          mail = Mailjet::Mail.new(mjmessage['From'],
+                            mjmessage['To'],
+                            mjmessage['Subject'],
+                            mjmessage['TextPart'] || '',
+                            mjmessage['HTMLPart'] || '',
+                            mjmessage['Attachments'] || [])
+
+          message = {
+              :source => mail.to_smtp_payload,
+              :sender => mail.get_sender,
+              :recipients => mail.get_recipients,
+          }
+          MailCatcher::Mail.add_message message
+          puts "==> API: Received message from '#{message[:sender]}' (#{message[:source].length} bytes)"
         end
       end
 
