@@ -179,20 +179,43 @@ module MailCatcher
         content_type 'application/json'
         push["Messages"].each do |mjmessage|
           mail = Mailjet::Mail.new(mjmessage['From'],
-                            mjmessage['To'],
-                            mjmessage['Subject'],
-                            mjmessage['TextPart'] || '',
-                            mjmessage['HTMLPart'] || '',
-                            mjmessage['Attachments'] || [])
+                                   mjmessage['To'],
+                                   mjmessage['Cc'] || [],
+                                   mjmessage['Bcc'] || [],
+                                   mjmessage['Subject'],
+                                   mjmessage['TextPart'] || '',
+                                   mjmessage['HTMLPart'] || '',
+                                   mjmessage['Attachments'] || [])
 
           message = {
               :source => mail.to_smtp_payload,
               :sender => mail.get_sender,
-              :recipients => mail.get_recipients,
+              :recipients => mail.get_to,
           }
-          MailCatcher::Mail.add_message message
           puts "==> API: Received message from '#{message[:sender]}' (#{message[:source].length} bytes)"
+          MailCatcher::Mail.add_message message
+
+          # CC & BCC are shown as separate individual messages
+          mail.get_cc.each do |recipient|
+            message = {
+                :source => mail.to_smtp_payload,
+                :sender => mail.get_sender,
+                :recipients => [recipient],
+            }
+            MailCatcher::Mail.add_message message
+          end
+
+          mail.get_bcc.each do |recipient|
+            message = {
+                :source => mail.to_smtp_payload,
+                :sender => mail.get_sender,
+                :recipients => [recipient],
+            }
+            MailCatcher::Mail.add_message message
+          end
         end
+
+        status 201
       end
 
       not_found do

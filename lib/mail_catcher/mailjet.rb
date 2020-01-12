@@ -2,10 +2,12 @@ module MailCatcher
   module Mailjet
 
     class Mail
-      def initialize(from, to, subject, text_part = '', html_part = '', attachments = [])
+      def initialize(from, to, cc, bcc, subject, text_part = '', html_part = '', attachments = [])
         @uid = SecureRandom.uuid.gsub(/[-]/,'')
         @from = from
         @to = to
+        @cc = cc
+        @bcc = bcc
         @subject = subject
         @text_part = text_part
         @html_part = html_part
@@ -16,7 +18,11 @@ module MailCatcher
         "#{@from['Name']} <#{@from['Email']}>"
       end
 
-      def get_recipients
+      def get_all_recipients
+        get_to.concat get_cc.concat get_bcc
+      end
+
+      def get_to
         to = []
         @to.each do |receiver|
           to << "#{receiver['Name']} <#{receiver['Email']}>"
@@ -25,15 +31,43 @@ module MailCatcher
         to
       end
 
+      def get_cc
+        cc = []
+        @cc.each do |receiver|
+          cc << "#{receiver['Name']} <#{receiver['Email']}>"
+        end
+
+        cc
+      end
+
+      def get_bcc
+        bcc = []
+        @bcc.each do |receiver|
+          bcc << "#{receiver['Name']} <#{receiver['Email']}>"
+        end
+
+        bcc
+      end
+
       def to_smtp_payload
         from = get_sender
-        to = get_recipients
 
         head = "#{DateTime.now.strftime('Date: %a, %d %b %Y %H:%M:%S %z')}
 Subject: #{@subject}
 From: #{from}
-To: #{to.join(', ')}
-MIME-Version: 1.0
+To: #{get_to.join(', ')}
+"
+        unless @cc.empty?
+          head.concat("Cc: #{get_cc.join(', ')}
+")
+        end
+
+        unless @bcc.empty?
+          head.concat("Bcc: #{get_bcc.join(', ')}
+")
+        end
+
+"MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary=#{@uid}
 
 "
