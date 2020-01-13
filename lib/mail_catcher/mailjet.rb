@@ -67,10 +67,10 @@ To: #{get_to.join(', ')}
 ")
         end
 
-"MIME-Version: 1.0
+        head.concat("MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary=#{@uid}
 
-"
+")
         body_id = SecureRandom.uuid.gsub(/[-]/,'')
         body = ''
         alternate = false
