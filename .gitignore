@@ -11,3 +11,6 @@
 
 # Build gems
 *.gem
+
+# Editor stuff
+tags

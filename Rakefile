@@ -3,7 +3,7 @@
 require "fileutils"
 require "rubygems"
 
-require "mail_catcher/version"
+require_relative "lib/mail_catcher/version"
 
 # XXX: Would prefer to use Rake::SprocketsTask but can't populate
 # non-digest assets, and we don't want sprockets at runtime so
